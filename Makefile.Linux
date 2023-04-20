@@ -43,7 +43,7 @@ allplugins:
 	@list='$(PLUGINS)'; for p in $$list; do cp Makefile Makefile.var plugins/$$p; cd plugins/$$p ; make ;	cd ../.. ; done
 
 DESTDIR		=
-prefix		= 
+prefix		= /usr/local/3proxy
 exec_prefix	= $(prefix)
 man_prefix	= /usr/share
 chroot_prefix	= /usr/local

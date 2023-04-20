@@ -27,14 +27,14 @@ make clean
 
 
 %files
-/bin/3proxy
-/bin/ftppr
-/bin/mycrypt
-/bin/pop3p
-/bin/proxy
-/bin/socks
-/bin/tcppm
-/bin/udppm
+/usr/local/3proxy/bin/3proxy
+/usr/local/3proxy/bin/ftppr
+/usr/local/3proxy/bin/mycrypt
+/usr/local/3proxy/bin/pop3p
+/usr/local/3proxy/bin/proxy
+/usr/local/3proxy/bin/socks
+/usr/local/3proxy/bin/tcppm
+/usr/local/3proxy/bin/udppm
 %config(noreplace) /etc/3proxy/3proxy.cfg
 /etc/3proxy/conf
 /etc/init.d/3proxy

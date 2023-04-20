@@ -18,7 +18,7 @@ case "$1" in
        echo Starting 3Proxy
    
        /bin/mkdir -p /var/run/3proxy
-       /bin/3proxy /etc/3proxy/3proxy.cfg &
+       /usr/local/3proxy/bin/3proxy /etc/3proxy/3proxy.cfg &
    
        RETVAL=$?
        echo

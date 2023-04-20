@@ -1,4 +1,4 @@
-#!/bin/3proxy
+#!/usr/local/3proxy/bin/3proxy
 #daemon
 chroot /usr/local/3proxy proxy proxy
 include /conf/3proxy.cfg
