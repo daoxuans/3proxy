@@ -475,6 +475,7 @@ int startconnlims (struct clientparam *param){
 	uint64_t rating;
 	int ret = 0;
 
+	param->connlim = 1;
 	pthread_mutex_lock(&connlim_mutex);
 	for(ce = conf.connlimiter; ce; ce = ce->next) {
 		if(ACLmatches(ce->ace, param)){
@@ -659,7 +660,7 @@ int alwaysauth(struct clientparam * param){
 	int countout = 0;
 
 
-	if(conf.connlimiter && param->remsock == INVALID_SOCKET && startconnlims(param)) return 10;
+	if(conf.connlimiter && !param->connlim  && startconnlims(param)) return 10;
 	res = doconnect(param);
 	if(!res){
 		if(conf.bandlimfunc && (conf.bandlimiter||conf.bandlimiterout)){
@@ -682,7 +683,10 @@ int alwaysauth(struct clientparam * param){
 						countout = 1;
 						if(tc->ace->action != COUNTALL) continue;
 					}
-					if(tc->traflim64 <= tc->traf64) return 10;
+					if(tc->traflim64 <= tc->traf64) {
+					    pthread_mutex_unlock(&tc_mutex);
+					    return 10;
+					}
 					param->trafcountfunc = conf.trafcountfunc;
 					param->maxtrafin64 = tc->traflim64 - tc->traf64; 
 				}
@@ -694,7 +698,10 @@ int alwaysauth(struct clientparam * param){
 					if(tc->ace->action != COUNTOUT && tc->ace->action !=  COUNTALL) {
 						continue;
 					}
-					if(tc->traflim64 <= tc->traf64) return 10;
+					if(tc->traflim64 <= tc->traf64) {
+					    pthread_mutex_unlock(&tc_mutex);
+					    return 10;
+					}
 					param->trafcountfunc = conf.trafcountfunc;
 					param->maxtrafout64 = tc->traflim64 - tc->traf64; 
 				}

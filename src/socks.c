@@ -15,6 +15,17 @@ unsigned char * commands[] = {(unsigned char *)"UNKNOWN", (unsigned char *)"CONN
 #define BUFSIZE 1024
 #define LARGEBUFSIZE 67000
 
+static void printcommand(unsigned char * buf, int command, struct clientparam *param){
+    sprintf((char *)buf, "%s ", commands[command]);
+    if(param->hostname){
+	sprintf((char *)buf + strlen((char *)buf), "%.265s", param->hostname);
+    }
+    else 
+	myinet_ntop(*SAFAMILY(&param->req), SAADDR(&param->req), (char *)buf + strlen((char *)buf), 64);
+    sprintf((char *)buf+strlen((char *)buf), ":%hu", ntohs(*SAPORT(&param->req)));
+
+}
+
 void * sockschild(struct clientparam* param) {
  int res;
  unsigned i=0;
@@ -132,7 +143,8 @@ void * sockschild(struct clientparam* param) {
 			buf[i] = (unsigned char)res;
 		}
 		buf[i] = 0;
-		if(!getip46(param->srv->family, buf, (struct sockaddr *) &param->req)) RETURN(100);
+		if(command != 1 && param->srv->family != 6 && (!strcmp((char *)buf, "0.0.0.0") || !strcmp((char *)buf, "0"))) param->req = param->srv->extsa;
+		else if(!getip46(param->srv->family, buf, (struct sockaddr *) &param->req)) RETURN(100);
 		param->sinsr = param->req;
 		break;
 	default:
@@ -203,7 +215,19 @@ void * sockschild(struct clientparam* param) {
 	RETURN(res);
  }
 
+#ifndef WITHMAIN
+ if(param->nreqfilters && buf){
+    int reqbufsize = BUFSIZE, reqsize, action;
 
+    printcommand(buf, command, param);
+    reqsize = strlen((char *)buf);
+    action = handlereqfilters(param, &buf, &reqbufsize, 0, &reqsize);
+    if(action == HANDLED){
+	RETURN(0);
+    }
+    if(action != PASS) RETURN(517);
+ }
+#endif
 
  if(command > 1) {
 	if(so._bind(param->remsock,(struct sockaddr *)&param->sinsl,SASIZE(&param->sinsl))) {
@@ -232,6 +256,11 @@ fflush(stderr);
 	}
  }
  param->res = 0;
+
+
+
+
+
 
 CLEANRET:
 
@@ -273,6 +302,8 @@ fflush(stderr);
 		memcpy(buf+4, SAADDR(&sin), 4);
 		socksend(param->clisock, buf, 8, conf.timeouts[STRING_S]);
 	}
+
+
 
 	if (param->npredatfilters){
 	    int action;
@@ -463,13 +494,8 @@ fflush(stderr);
  
  if(command > 3) command = 0;
  if(buf){
-	 sprintf((char *)buf, "%s ", commands[command]);
-	 if(param->hostname){
-	  sprintf((char *)buf + strlen((char *)buf), "%.265s", param->hostname);
-	 }
-	 else 
-		myinet_ntop(*SAFAMILY(&param->req), SAADDR(&param->req), (char *)buf + strlen((char *)buf), 64);
-         sprintf((char *)buf+strlen((char *)buf), ":%hu", ntohs(*SAPORT(&param->req)));
+	 printcommand(buf, command, param);
+
 	 dolog(param, buf);
 	 myfree(buf);
  }
